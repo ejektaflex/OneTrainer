@@ -108,7 +108,22 @@ class StableDiffusionXLLoRASetup(
         if model.unet_lora is not None:
             train_unet = config.unet.train and \
                          not self.stop_unet_training_elapsed(config, model.train_progress)
-            model.unet_lora.requires_grad_(train_unet)
+            
+            # Do NOT train unet
+            # model.unet_lora.requires_grad_(train_unet)
+
+            if train_unet:
+                hooked = False
+
+                for mod_name, module in model.unet_lora.lora_modules.items():
+                    if 'up_blocks.0.attentions.0' in mod_name or 'up_blocks.0.attentions.1' in mod_name:
+                        hooked = True
+                        module.requires_grad_(True)
+                    else:
+                        module.requires_grad_(False)
+
+                if hooked:
+                    print("Enabled only B-Lora Attention Layers")
 
     def setup_model(
             self,
