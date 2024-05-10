@@ -99,7 +99,23 @@ class StableDiffusionXLFineTuneSetup(
 
         train_unet = config.unet.train and \
                      not self.stop_unet_training_elapsed(config, model.train_progress)
-        model.unet.requires_grad_(train_unet)
+        
+        if train_unet:
+            hooked = False
+
+            for mod_name, module in model.unet.named_parameters():
+                # print("Mod Name")
+                # print(mod_name)
+                if 'model.diffusion_model' not in mod_name or 'output_blocks.0.1' in mod_name or 'output_blocks.1.1' in mod_name:
+                    hooked = True
+                    module.requires_grad_(True)
+                else:
+                    module.requires_grad_(False)
+
+            if hooked:
+                print("Enabled only B-LoRa Attention Layer Equivalents in Base Model")
+
+        # model.unet.requires_grad_(train_unet)
 
         model.vae.requires_grad_(False)
 

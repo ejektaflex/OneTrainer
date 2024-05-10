@@ -123,7 +123,7 @@ class StableDiffusionXLLoRASetup(
                         module.requires_grad_(False)
 
                 if hooked:
-                    print("Enabled only B-Lora Attention Layers")
+                    print("Enabled only B-LoRa Attention Layers")
 
     def setup_model(
             self,
