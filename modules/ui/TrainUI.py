@@ -7,6 +7,7 @@ from tkinter import filedialog
 from typing import Callable
 
 import customtkinter as ctk
+import torch
 
 from modules.trainer.GenericTrainer import GenericTrainer
 from modules.ui.CaptionUI import CaptionUI
@@ -208,30 +209,20 @@ class TrainUI(ctk.CTk):
         master.grid_columnconfigure(3, weight=0)
         master.grid_columnconfigure(4, weight=1)
 
-        # circular mask generation
-        components.label(master, 0, 0, "Circular Mask Generation",
-                         tooltip="Automatically create circular masks for masked training")
-        components.switch(master, 0, 1, self.ui_state, "circular_mask_generation")
-
-        # random rotate and crop
-        components.label(master, 1, 0, "Random Rotate and Crop",
-                         tooltip="Randomly rotate the training samples and crop to the masked region")
-        components.switch(master, 1, 1, self.ui_state, "random_rotate_and_crop")
-
         # aspect ratio bucketing
-        components.label(master, 2, 0, "Aspect Ratio Bucketing",
+        components.label(master, 0, 0, "Aspect Ratio Bucketing",
                          tooltip="Aspect ratio bucketing enables training on images with different aspect ratios")
-        components.switch(master, 2, 1, self.ui_state, "aspect_ratio_bucketing")
+        components.switch(master, 0, 1, self.ui_state, "aspect_ratio_bucketing")
 
         # latent caching
-        components.label(master, 3, 0, "Latent Caching",
+        components.label(master, 1, 0, "Latent Caching",
                          tooltip="Caching of intermediate training data that can be re-used between epochs")
-        components.switch(master, 3, 1, self.ui_state, "latent_caching")
+        components.switch(master, 1, 1, self.ui_state, "latent_caching")
 
         # clear cache before training
-        components.label(master, 4, 0, "Clear cache before training",
+        components.label(master, 2, 0, "Clear cache before training",
                          tooltip="Clears the cache directory before starting to train. Only disable this if you want to continue using the same cached data. Disabling this can lead to errors, if other settings are changed during a restart")
-        components.switch(master, 4, 1, self.ui_state, "clear_cache_before_training")
+        components.switch(master, 2, 1, self.ui_state, "clear_cache_before_training")
 
     def create_concepts_tab(self, master):
         ConceptTab(master, self.train_config, self.ui_state)
@@ -313,10 +304,13 @@ class TrainUI(ctk.CTk):
                          tooltip="The interval used when automatically saving the model during training")
         components.time_entry(master, 3, 1, self.ui_state, "save_after", "save_after_unit")
 
+        # save now
+        components.button(master, 3, 3, "save now", self.save_now)
+
         # save filename prefix
-        components.label(master, 3, 3, "Save Filename Prefix",
+        components.label(master, 4, 0, "Save Filename Prefix",
                          tooltip="The prefix for filenames used when saving the model during training")
-        components.entry(master, 3, 4, self.ui_state, "save_filename_prefix")
+        components.entry(master, 4, 1, self.ui_state, "save_filename_prefix")
 
     def lora_tab(self, master):
         master.grid_columnconfigure(0, weight=0)
@@ -349,12 +343,17 @@ class TrainUI(ctk.CTk):
         components.entry(master, 3, 1, self.ui_state, "dropout_probability")
 
         # lora weight dtype
-        components.label(master, 5, 0, "LoRA Weight Data Type",
+        components.label(master, 4, 0, "LoRA Weight Data Type",
                          tooltip="The LoRA weight data type used for training. This can reduce memory consumption, but reduces precision")
-        components.options_kv(master, 5, 1, [
+        components.options_kv(master, 4, 1, [
             ("float32", DataType.FLOAT_32),
             ("bfloat16", DataType.BFLOAT_16),
         ], self.ui_state, "lora_weight_dtype")
+
+        # For use with additional embeddings.
+        components.label(master, 5, 0, "Bundle Embeddings",
+                         tooltip="Bundles any additional embeddings into the LoRA output file, rather than as separate files")
+        components.switch(master, 5, 1, self.ui_state, "bundle_additional_embeddings")
 
         return master
 
@@ -528,6 +527,10 @@ class TrainUI(ctk.CTk):
         trainer.end()
 
         # clear gpu memory
+        del trainer
+        self.training_thread = None
+        self.training_commands = None
+        torch.clear_autocast_cache()
         torch_gc()
 
         if error_caught:
@@ -535,8 +538,6 @@ class TrainUI(ctk.CTk):
         else:
             self.on_update_status("stopped")
 
-        self.training_thread = None
-        self.training_commands = None
         self.training_button.configure(text="Start Training", state="normal")
 
     def start_training(self):
@@ -573,3 +574,8 @@ class TrainUI(ctk.CTk):
         train_commands = self.training_commands
         if train_commands:
             train_commands.backup()
+
+    def save_now(self):
+        train_commands = self.training_commands
+        if train_commands:
+            train_commands.save()
