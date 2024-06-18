@@ -36,6 +36,14 @@ def label(master, row, column, text, pad=PAD, tooltip=None, wide_tooltip=False, 
     return component
 
 
+def bigtextbox(master, row, column, text):
+    component = ctk.CTkTextbox(master, width=720, height=200)
+    component.grid(row=row, column=column, padx=PAD, pady=PAD, sticky="new")
+    component.grid_rowconfigure(0, weight=1)
+    component.grid_columnconfigure(0, weight=1)
+    return component
+
+
 def entry(
         master,
         row,

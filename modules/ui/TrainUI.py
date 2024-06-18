@@ -228,7 +228,7 @@ class TrainUI(ctk.CTk):
         ConceptTab(master, self.train_config, self.ui_state)
 
     def create_training_tab(self, master) -> TrainingTab:
-        return TrainingTab(master, self.train_config, self.ui_state)
+        return TrainingTab(master, self.train_config, self.ui_state, self)
 
     def create_sampling_tab(self, master):
         master.grid_rowconfigure(0, weight=0)

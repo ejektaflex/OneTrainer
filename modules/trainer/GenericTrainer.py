@@ -83,6 +83,20 @@ class GenericTrainer(BaseTrainer):
 
         self.grad_hook_handles = []
 
+    def report_keys(self):
+        self.model_loader = self.create_model_loader()
+        self.model_setup = self.create_model_setup()
+        model_names = self.config.model_names()
+        self.model = self.model_loader.load(
+            model_type=self.config.model_type,
+            model_names=model_names,
+            weight_dtypes=self.config.weight_dtypes(),
+        )
+        self.model.train_config = self.config
+        self.model_setup.setup_train_device(self.model, self.config)
+        self.model_setup.setup_model(self.model, self.config)
+        return self.model_setup.get_layer_names(self.model, self.config)
+
     def start(self):
         if self.config.clear_cache_before_training and self.config.latent_caching:
             self.__clear_cache()

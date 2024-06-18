@@ -32,6 +32,7 @@ class PixArtAlphaLoRASetup(
         parameter_group_collection = NamedParameterGroupCollection()
 
         if config.text_encoder.train:
+            print("TRAINING TE")
             parameter_group_collection.add_group(NamedParameterGroup(
                 unique_name="text_encoder_lora",
                 display_name="text_encoder_lora",
@@ -70,8 +71,11 @@ class PixArtAlphaLoRASetup(
         model.vae.requires_grad_(False)
 
         if model.text_encoder_lora is not None:
+            print("TE Lora is not None")
             train_text_encoder = config.text_encoder.train and \
                                  not self.stop_text_encoder_training_elapsed(config, model.train_progress)
+            print("TE Requires Grad?: " + str(train_text_encoder))
+            print(train_text_encoder)
             model.text_encoder_lora.requires_grad_(train_text_encoder)
 
         for i, embedding in enumerate(model.additional_embeddings):

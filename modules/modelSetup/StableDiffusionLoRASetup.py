@@ -1,5 +1,6 @@
 import torch
 
+from modules.model.BaseModel import BaseModel
 from modules.model.StableDiffusionModel import StableDiffusionModel
 from modules.modelSetup.BaseStableDiffusionSetup import BaseStableDiffusionSetup
 from modules.module.LoRAModule import LoRAModuleWrapper
@@ -84,6 +85,8 @@ class StableDiffusionLoRASetup(
             train_unet = config.unet.train and \
                          not self.stop_unet_training_elapsed(config, model.train_progress)
             model.unet_lora.requires_grad_(train_unet)
+
+
 
     def setup_model(
             self,

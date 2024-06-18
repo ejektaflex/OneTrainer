@@ -36,6 +36,9 @@ class BaseModelSetup(
     ) -> NamedParameterGroupCollection:
         pass
 
+    def get_layer_names(self, model: BaseModel, config: TrainConfig) -> list[str]:
+        pass
+
     @abstractmethod
     def setup_model(
             self,

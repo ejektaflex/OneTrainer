@@ -226,6 +226,7 @@ class TrainConfig(BaseConfig):
     scheduler_params: list[dict[str, str]]
     learning_rate: float
     learning_rate_warmup_steps: int
+    block_weights: str | list[str]
     learning_rate_cycles: float
     epochs: int
     batch_size: int
@@ -578,6 +579,7 @@ class TrainConfig(BaseConfig):
         data.append(("scheduler_params", [], list[dict[str, str]], True))
         data.append(("learning_rate", 3e-6, float, False))
         data.append(("learning_rate_warmup_steps", 200, int, False))
+        data.append(("block_weights", "ALL", str, False))
         data.append(("learning_rate_cycles", 1, int, False))
         data.append(("epochs", 100, int, False))
         data.append(("batch_size", 1, int, False))

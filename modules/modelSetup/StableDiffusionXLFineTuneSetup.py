@@ -23,6 +23,9 @@ class StableDiffusionXLFineTuneSetup(
             debug_mode=debug_mode,
         )
 
+    def get_layer_names(self, model: StableDiffusionXLModel, config: TrainConfig, ) -> list[str]:
+        return [mod_name for mod_name, module in model.unet.named_parameters()]
+
     def create_parameters(
             self,
             model: StableDiffusionXLModel,

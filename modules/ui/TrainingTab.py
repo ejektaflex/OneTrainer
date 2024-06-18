@@ -1,5 +1,7 @@
 import customtkinter as ctk
 
+from modules.ui import TrainUI
+from modules.ui.BlockFilterWindow import BlockWeightsWindow
 from modules.ui.OptimizerParamsWindow import OptimizerParamsWindow
 from modules.ui.SchedulerParamsWindow import SchedulerParamsWindow
 from modules.util.config.TrainConfig import TrainConfig
@@ -19,12 +21,13 @@ from modules.util.ui.UIState import UIState
 
 class TrainingTab:
 
-    def __init__(self, master, train_config: TrainConfig, ui_state: UIState):
+    def __init__(self, master, train_config: TrainConfig, ui_state: UIState, train_ui: TrainUI):
         super(TrainingTab, self).__init__()
 
         self.master = master
         self.train_config = train_config
         self.ui_state = ui_state
+        self.train_ui = train_ui
 
         master.grid_rowconfigure(0, weight=1)
         master.grid_columnconfigure(0, weight=1)
@@ -91,6 +94,7 @@ class TrainingTab:
         self.__create_align_prop_frame(column_2, 0)
         self.__create_masked_frame(column_2, 1)
         self.__create_loss_frame(column_2, 2, supports_vb_loss=False)
+        self.__create_block_weights_frame(column_2, 3)
 
     def __setup_wuerstchen_ui(self, column_0, column_1, column_2):
         self.__create_base_frame(column_0, 0)
@@ -521,8 +525,27 @@ class TrainingTab:
                          tooltip="Selects the type of loss scaling to use during training. Functionally equated as: Loss * selection")
         components.options(frame, 5, 1, [str(x) for x in list(LossScaler)], self.ui_state, "loss_scaler")
 
+
+        # block weights
+
+
+    def __create_block_weights_frame(self, master, row):
+        frame = ctk.CTkFrame(master=master, corner_radius=5)
+        frame.grid(row=row, column=0, padx=5, pady=5, sticky="nsew")
+        frame.grid_columnconfigure(0, weight=1)
+
+        components.label(frame, 1, 0, "Block Weights",
+                         tooltip="Which block weights to use")
+        components.options_adv(frame, 1, 1, ["ALL", "CUSTOM"], self.ui_state, "block_weights",
+                               command=self.__restore_block_weights_config,
+                               adv_command=self.__open_block_weights_window)
+
     def __open_optimizer_params_window(self):
         window = OptimizerParamsWindow(self.master, self.train_config, self.ui_state)
+        self.master.wait_window(window)
+
+    def __open_block_weights_window(self):
+        window = BlockWeightsWindow(self.master, self.train_ui, self.ui_state)
         self.master.wait_window(window)
 
     def __open_scheduler_params_window(self):
@@ -532,6 +555,11 @@ class TrainingTab:
     def __restore_optimizer_config(self, *args):
         optimizer_config = change_optimizer(self.train_config)
         self.ui_state.get_var("optimizer").update(optimizer_config)
+
+    def __restore_block_weights_config(self, *args):
+        pass # TODO
+        # optimizer_config = change_optimizer(self.train_config)
+        # self.ui_state.get_var("block_weights").update(optimizer_config)
 
     def __restore_scheduler_config(self, variable):
         if not hasattr(self, 'lr_scheduler_adv_comp'):
